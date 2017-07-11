@@ -16,19 +16,15 @@ logger = logging.getLogger(__name__)
 class PigChaseEnv(gym.Env):
     """The Pig Chase Environment"""
     metadata = {
-        'render.modes': ['human', 'rgb_array'],
-        'video.frames_per_second': 30
+        'render.modes': ['human'],
     }
     
     def __init__(self, rendering=True, pause=False):
         #logger.debug("Init ColorMatchingEnv")
-        self.viewer = None
-        
         self.n_agents = 2
         self.max_steps = 15
         self.remaining_steps = self.max_steps
         # 5 actions per agent
-        self.action_space = spaces.MultiDiscrete([[0, 4]] * self.n_agents)
         self.actions = {
             0: 'X',
             1: 'N',
@@ -36,16 +32,20 @@ class PigChaseEnv(gym.Env):
             3: 'S',
             4: 'E'
         }
-        
+        self.GRASS = 0
+        self.AGENTS = [1, 2]
+        self.PIG = 3
+        self.WALL = 4
+        self.PIT = 5
+        self.NE_CORNER = (1, 5)
+        self.NW_CORNER = (1, 1)
+        self.SW_CORNER = (5, 1)
+        self.SE_CORNER = (5, 5)
+
         self.states = np.zeros([2,2], dtype=uint8)
         self.pig_state = np.zeros([1,2], dtype=uint8)
         self.pits_positions = [np.array([3,0], dtype=uint8), np.array([3,6], dtype=uint8)]
         
-        self.GRASS = 0
-        self.AGENTS = [1,2]
-        self.PIG = 3
-        self.WALL = 4
-        self.PIT = 5
         
         self.base_grid = np.array([[self.WALL, self.WALL, self.WALL, self.WALL, self.WALL, self.WALL, self.WALL],
                                    [self.WALL, self.GRASS, self.GRASS, self.GRASS, self.GRASS, self.GRASS, self.WALL],
@@ -54,10 +54,7 @@ class PigChaseEnv(gym.Env):
                                    [self.WALL, self.GRASS, self.WALL, self.GRASS, self.WALL, self.GRASS, self.WALL],
                                    [self.WALL, self.GRASS, self.GRASS, self.GRASS, self.GRASS, self.GRASS, self.WALL],
                                    [self.WALL, self.WALL, self.WALL, self.WALL, self.WALL, self.WALL, self.WALL]])
-        self.NE_CORNER = (1,5)
-        self.NW_CORNER = (1,1)
-        self.SW_CORNER = (5,1)
-        self.SE_CORNER = (5,5)
+
         self.grid = self.base_grid
         self.spawns = self._spawns()
         
@@ -97,7 +94,6 @@ class PigChaseEnv(gym.Env):
             logger.debug("Prev state: [%d, %d]" % (self.states[i,0],self.states[i,1]))
             logger.debug("Action:     %c" % agent_action)
             self._update_agent_state(i, agent_action)
-            
             logger.debug("New state:  [%d, %d]" % (self.states[i][0], self.states[i][1]))
             logger.debug("")
         
